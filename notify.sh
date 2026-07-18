@@ -34,6 +34,14 @@ speak() {
   fi
 }
 
+# Internal detached-TTS entrypoint (see Channel 1). Speaks its argument and
+# exits without reading stdin, so it can run in its own session, independent of
+# the hook that spawned it.
+if [[ "${1:-}" == "__speak" ]]; then
+  speak "${2:-}"
+  exit 0
+fi
+
 mode="${1:-attention}"
 payload="$(cat)"
 
@@ -66,7 +74,15 @@ case "$mode" in
 esac
 
 # --- Channel 1: TTS --------------------------------------------------------
-speak "$spoken" &
+# Detach so playback survives this hook returning (Claude Code tears down the
+# hook's process group on exit, which would otherwise kill a plain background
+# job mid-sentence). setsid gives it a fresh session; fall back to a background
+# job if setsid is unavailable.
+if command -v setsid >/dev/null 2>&1; then
+  setsid -f "$0" __speak "$spoken" </dev/null >/dev/null 2>&1
+else
+  speak "$spoken" &
+fi
 
 # --- Channel 2: tmux status flash -----------------------------------------
 tmux display-message -t "${TMUX_PANE:-}" "${icon} ${name}: ${detail}" >/dev/null 2>&1 || true
