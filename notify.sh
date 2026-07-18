@@ -53,9 +53,13 @@ case "$mode" in
     urgency="low"
     ;;
   attention | *)
-    # Notification payloads carry a human-readable reason.
+    # Notification payloads carry a human-readable reason, e.g.
+    # "Claude needs your permission to use Bash".
     detail="$(printf '%s' "$payload" | jq -r '.message // "needs attention"')"
-    spoken="${name} needs attention"
+    # Speak the reason, not just a generic phrase. Claude's messages start with
+    # "Claude " — swap that for the session name so it reads naturally, e.g.
+    # "backend-api needs your permission to use Bash".
+    spoken="${name} ${detail#Claude }"
     icon="🔔"
     urgency="normal"
     ;;

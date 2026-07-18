@@ -18,8 +18,14 @@ lifecycle events. This wires two of them to a single script:
 
 | Event | When it fires | You hear |
 |-------|---------------|----------|
-| `Notification` | Claude is waiting for input or permission | *"{window} needs attention"* |
+| `Notification` | Claude is waiting for input or permission | *"{window} needs your permission to use Bash"* |
 | `Stop` | Claude finished a turn and is idle | *"{window} is done"* |
+
+On the `Notification` event the actual reason is spoken: Claude's messages
+start with "Claude…", and the session's window name is swapped in for it — so
+*"Claude needs your permission to use Bash"* becomes
+*"backend-api needs your permission to use Bash"*. If no message is provided it
+falls back to *"{window} needs attention"*.
 
 The session name is just the **tmux window name** (`#W`), so
 `tmux rename-window backend-api` is all you need to label a session.
